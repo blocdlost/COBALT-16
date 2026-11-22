@@ -1,0 +1,129 @@
+SPOCsys16 Instruction Set
+
+-Legend:
+ bbbb H ins - A: op1, op2, ...		bbbb ssssssssssssssssssssssssssss
+ 	    - B: op1, op2, ...		bbbb ssssssssssssssssssssssssssss
+ 	    -...
+
+ > bbbb: 4-bit Opcode
+ > H: Hexadecimal Opcode
+ > ins: 3-letter Instruction Name
+ > A, B: Instruction Syntax A, B, ...
+ > op1, op2: Instruction Operands
+ 
+ > s: 28-bit remainder of the entire Instruction
+   further specification explained at listed instructions
+  
+  if an operand is listed fully capitalized, the operand syntax should be taken as-is.
+  if there is a 0 or 1 in the 28-bit remainder, that decides whether the Instruction Decoder handles it as A or B syntax.
+  if there are dash ("-") symbols in the 28-bit remainder, the Instruction Decoder sees those bits as redundant (the output does not depend on them).
+  
+
+-INSTRUCTIONS:
+ 0000 0 MOV - A: rg1, rg2		0000 0aaaabbbb-------------------
+ 	    - B: rg1, val		0000 1aaaavvvvvvvvvvvvvvvv-------
+ 0001 1 ART - A: opt, rg1, rg2		0001 ttaaaabbbb------------------
+ 0010 2 LGC - A: opt, rg1, rg2		0010 ttaaaabbbb------------------
+ 	    - B: NOT, rg1		0010 ttaaaa----------------------
+ 0011 3 JMP - A: adr, ctf, rg1, rg2	0011 ddddddddddddd0-vccctaaaabbbb
+ 	    - B: adr, IMD		0011 ddddddddddddd1--------------
+ 0100 4 IDC - A: dir, rg1		0100 iaaaa-----------------------
+ 0101 5 CAP - A: rg1, beg, len		0101 aaaabbbbrrrr----------------
+ 0110 6 SHF - A: rg1, dir, val		0110 aaaaivvvv-------------------
+ 0111 7 MEM - A: plc, rg1, rg2		0111 ppaaaabbbb-----------------0
+ 	    - B: DMP, adr, val		0111 dddddddddddvvvvvvvvvvvvvvvv1
+ 1000 8 DSP - A: way, rg1		1000 waaaa-----------------------
+ 1111 F END - A:			1111 ----------------------------
+ 	    - B: exc			1111 xxxxxxxxxxxxxxxx------------
+ 
+ Legend for dictionary:
+ > registers: 	rax -> 0000   r1x -> 1000
+ 		rbx -> 0001   r2x -> 1001
+ 		rcx -> 0010   r3x -> 1010
+ 		rdx -> 0011   r4x -> 1011
+ 
+ Dictionary:
+ > 0000 0 MOV = Move | MOV rg1 rg2 | MOV rg1 val
+ 	    A = Moves the value stored in register ('rg2') to be also stored in register ('rg1'), essentially copying the value from one register to the other.
+	         rg1: Destination register. Value of Start register gets stored here
+	              Possible entries: registers
+	              Decoded position: 'aaaa'
+	         rg2: Start register. Value stored inside this register gets stored in Destination registerű
+	              Possible entries: registers
+	              Decoded position: 'bbbb'
+	    
+	    B = Moves the value specified in the Instruction to register (rg1), essentially storing the requested value in register.
+	         rg1: Destination register. Value gets stored here
+	              Possible entries: registers
+	              Decoded position: 'aaaa'
+	         val: Value. This is to be stored in the Destination register
+	              Possible entries: 16b binary (0b0000000000000000 - 0b1111111111111111); 4 digit hexadecimal (0x0000 - 0xFFFF); decimal values (0 - 65535)
+	              Decoded position: 'vvvvvvvvvvvvvvvv'
+  
+ > 0001 1 ART = Arithmetic | ART opt rg1 rg2
+  	    A = Completes an arithmetic calculation between the two registers given ('rg1', 'rg2'), first register ('rg1') being the main operand and the second register ('rg2') being the secondary.
+  	        e.g. rg1 + rg2, rg1 - rg2, rg1 × rg2, rg1 ÷ rg2; these are also the four possible calculations.
+  	        The operation done is specified by its 3 letter sign code ('opt'), which decides the calculation.
+  	        Result of the operation is stored in the first register ('rg1'), in special cases (division) the secondary result (remainder) is stored in register: R4X.
+  	         opt: Operation type. Specifies the calculation used between the two values
+  		      Possible entries: [add, sub, mul, div] -> [00, 01, 10, 11]
+  		      Decoded position: 'tt'
+  		 rg1: Main operand register. Value of this register is the first term in the operation; the main result of the operation is also stored here
+  		      Possible entries: registers
+  		      Decoded position: 'aaaa'
+  		 rg2: Secondary operand register. Value of this register is the second term in the operation
+  		      Possible Entries: registers
+  		      Decoded position: 'bbbb'
+
+
+ > 0010 2 LGC = Logic | LGC opt rg1 rg2 | LGC NOT rg1
+ 	    A = Completes a logic calculation between individual bits (bitwise) of the two registers given ('rg1', 'rg2').
+ 	    	e.g. rg1 AND rg2, rg1 OR rg2, rg1 XOR rg2; these are also the three possible calculations with this syntax.
+ 	    	The operation done is specified by its 3 letter sign code ('opt'), which decides the calculation.
+ 	    	Result of the operation is stored in the first register ('rg1').
+ 	    	 opt: Operation type. Specifies the calculation used between the two values
+ 		      Possible entries: [and, _or, xor] -> [00, 01, 10]
+ 		      Decoded position: 'tt'
+ 		 rg1: First operand register. The result of the operation is also stored here
+ 		      Possible entries: registers
+ 		      Decoded position: 'aaaa'
+ 		 rg2: Second operand register.
+ 		      Decoded position: 'bbbb'
+
+ 	    B = Completes a NOT logic calculation on the bits of the given register (rg1).
+ 	        The result of the operation is stored in the same register given (rg1).
+ 	        (opt: Operation type.			   )
+ 	        (     Possible entries: 'NOT'		   )
+ 	        (     Decoded position: 'tt'; literal: '11')
+ 	         rg1: Operand register. Value of this register gets negated and stored into the same register
+ 	              Possible entries: registers
+ 	              Decoded position: 'aaaa'
+
+
+  > 0011 3 JMP = (Un)Conditional Process Jump | JMP adr ctf rg1 rg2 | JMP adr IMD
+	     A = Jumps to a specified (given either by dynamic (+x/-x) or static (x) format) line ('adr') whether the condition given ('ctf') is true for the values of the two registers given ('rg1', 'rg2').
+	         The condition ('ctf') includes a relative comparison between the registers ('rg1', 'rg2'), whether the value they contain is 0 or not, and whether to jump when it applies or when it does not.
+	         If the condition turns out to be true (or false, for that matter) the address of the line given ('adr') is stored in the instruction counter/pointer (RIP), and the process continues there.
+	          adr: Address. When "triggered", the instruction will jump to the line at this value
+	               Possible entries: decimal values (0 - 8191)
+	               Decoded position: 'ddddddddddddd'
+	          ctf: Condition. This is what the Instruction Decoder checks the "flags" against to determine whether to "trigger" the jump
+	               Possible entries & Decoded positions:
+	               	> is zero? = [x--][Ccc]; n (for not zero) -> 0, y (for yes zero) -> 1, v (do not check zero) -> 1 mapped to [v]; [Ccc] stays 0
+	               	> comparison = [-xx][cCC]; = (rg1 = rg2) -> 00, > (rg1 > rg2) -> 01, < (rg1 < rg2) -> 10
+	               	> true/false = 't'; t (for true) -> 1, f (for false) -> 0
+	               	e.g. rg1 is zero, rg2 is lesser (negative), and jump when this is true ==> y>t [1 01 1]
+	          rg1: First comparable register. Stands before the relation
+	               Possible entries: registers
+	               Decoded position: 'aaaa'
+	          rg2: Second comparable register. Stands after the relation
+	               Possible entries: registers
+	               Decoded position: 'bbbb'
+
+	     B = Jumps to specified (given either by dynamic or static format) line ('adr') unconditionally (whenever RIP reaches the instruction).
+	          adr: Address. Jumps to the corresponding line 
+	               Possible entries: decimal values (0 - 8191)
+	               Decoded position: 'ddddddddddddd'
+	         (ctf: Condition.	      )
+	         (     Possible entries: 'IMD')
+	         (     Decoded positions: none)
