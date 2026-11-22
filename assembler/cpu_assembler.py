@@ -418,13 +418,13 @@ while rawLine:
 
                     code = "0111"+dmpAddr+dmpVal+"1"
 
-            elif line[4:7] == "pre" or line[4:7] == "pst" or line[4:7] == "hre" or line[4:7] == "hst":
+            elif line[4:7] == "dre" or line[4:7] == "dst" or line[4:7] == "ere" or line[4:7] == "est":
                 memPlc = line[4]
                 memIns = line[5:7]
 
-                if memPlc == "p":
+                if memPlc == "d":
                     memPlc = "0"
-                elif memPlc == "h":
+                elif memPlc == "e":
                     memPlc = "1"
 
                 if memIns == "re":

@@ -20,21 +20,21 @@ SPOCsys16 Instruction Set
   
 
 -INSTRUCTIONS:
- 0000 0 MOV - A: rg1, rg2		0000 0aaaabbbb-------------------	"move register"
-            - B: rg1, val		0000 1aaaavvvvvvvvvvvvvvvv-------	"move value"
- 0001 1 ART - A: opt, rg1, rg2		0001 ttaaaabbbb------------------	"arithmetic operation"
- 0010 2 LGC - A: opt, rg1, rg2		0010 ttaaaabbbb------------------	"logic operation"
-            - B: NOT, rg1		0010 ttaaaa----------------------	"logic NOT"
- 0011 3 JMP - A: adr, ctf, rg1, rg2	0011 ddddddddddddd0-vzcctaaaabbbb	"conditional jump"
-            - B: adr, IMD		0011 ddddddddddddd1--------------	"unconditional jump"
- 0100 4 IDC - A: dir, rg1		0100 iaaaa-----------------------	"increment/decrement"
- 0101 5 CAP - A: rg1, beg, len		0101 aaaabbbbrrrr----------------	"bitcapping/bitmasking"
- 0110 6 SHF - A: rg1, dir, val		0110 aaaaivvvv-------------------	"bitshifting"
- 0111 7 MEM - A: plc, rg1, rg2		0111 ppaaaabbbb-----------------0	"memory access"
-            - B: DMP, adr, val		0111 dddddddddddvvvvvvvvvvvvvvvv1	"memory dump"
- 1000 8 DSP - A: way, rg1		1000 waaaa-----------------------	"display access"
- 1111 F END - A:			1111 ----------------------------	"empty halt"
-            - B: exc			1111 xxxxxxxxxxxxxxxx------------	"halt with exit code"
+ 0000 0 MOV - A: rg1, rg2               0000 0aaaabbbb-------------------	"move register"
+            - B: rg1, val               0000 1aaaavvvvvvvvvvvvvvvv-------	"move value"
+ 0001 1 ART - A: opt, rg1, rg2          0001 ttaaaabbbb------------------	"arithmetic operation"
+ 0010 2 LGC - A: opt, rg1, rg2          0010 ttaaaabbbb------------------	"logic operation"
+            - B: NOT, rg1               0010 ttaaaa----------------------	"logic NOT"
+ 0011 3 JMP - A: adr, ctf, rg1, rg2     0011 ddddddddddddd0-vzcctaaaabbbb	"conditional jump"
+            - B: adr, IMD               0011 ddddddddddddd1--------------	"unconditional jump"
+ 0100 4 IDC - A: dir, rg1               0100 iaaaa-----------------------	"increment/decrement"
+ 0101 5 CAP - A: rg1, beg, len          0101 aaaabbbbllll----------------	"bitcapping/bitmasking"
+ 0110 6 SHF - A: rg1, dir, val          0110 aaaaivvvv-------------------	"bitshifting"
+ 0111 7 MEM - A: plc, rg1, rg2          0111 pcaaaabbbb-----------------0	"memory access"
+            - B: DMP, adr, val          0111 dddddddddddvvvvvvvvvvvvvvvv1	"memory dump"
+ 1000 8 DSP - A: way, rg1               1000 waaaa-----------------------	"display access"
+ 1111 F END - A:                        1111 ----------------------------	"empty halt"
+            - B: exc                    1111 xxxxxxxxxxxxxxxx------------	"halt with exit code"
 
 
 
@@ -55,7 +55,7 @@ SPOCsys16 Instruction Set
  		0 - max -> 0 - 1...1
  
  Legend for dictionary: (pattern)
- > bbbb x INS = Instruction | INS op1 op2 ... | INS op3 op4 ... | ...
+ > bbbb x INS = Instruction | A. INS op1 op2 ... | B. INS op3 op4 ... | ...
  	A. ...
  	- Arguments:
  		op1: ...
@@ -69,8 +69,8 @@ SPOCsys16 Instruction Set
  	...
  
  Instruction Dictionary:
- > 0000 0 MOV = Move | MOV rg1 rg2 | MOV rg1 val
-	A. Moves the value stored in register ('rg2') to be also stored in register ('rg1'), essentially copying the value from one register to the other.
+ > 0000 0 MOV = Move | A. MOV rg1 rg2 | B. MOV rg1 val
+	A. Moves the value stored in the start register ('rg2') to be also stored in the dest. register ('rg1'), essentially copying the value from one register to the other.
 	- Arguments:
 		rg1: Destination register (value of Start register gets moved here)
 		- Possible entries: registers
@@ -80,29 +80,28 @@ SPOCsys16 Instruction Set
 		- Possible entries: registers
 		- Decoded position: @ 'bbbb'
 	    
-	B. Moves the value specified in the Instruction to register (rg1), essentially storing the requested value in register.
+	B. Moves the value specified to register (rg1), essentially storing the requested value in register.
 	- Arguments:
 		rg1: Destination register (given value gets stored here)
 	        - Possible entries: registers
 	        - Decoded position: 'aaaa'
 
 	        val: Value
-	        - Possible entries: binary, hexadecimal, or decimal
+	        - Possible entries: binary, hexadecimal, or decimal (16 bits)
 	        - Decoded position: @ 'vvvvvvvvvvvvvvvv'
 
 
- > 0001 1 ART = Arithmetic | ART opt rg1 rg2
+ > 0001 1 ART = Arithmetic | A. ART opt rg1 rg2
 	A. Completes an arithmetic calculation between the two registers given ('rg1', 'rg2'), first register ('rg1') being the main operand and the second register ('rg2') being the secondary.
-	e.g. rg1 + rg2, rg1 - rg2, rg1 × rg2, rg1 ÷ rg2; these are also the four possible calculations.
-  	The operation done is specified by its 3 letter sign code ('opt'), which decides the calculation.
-  	Result of the operation is stored in the first register ('rg1'), in special cases (division) the secondary result (remainder) is stored in register: R4X.
+	The operation to be done is specified by its 3 letter sign code ('opt'), which decides the type of calculation.
+	The result of the operation is stored in the first register given ('rg1'). In special cases (lit.: divison) the additional result of the operation is stored in regiter "r4x".
   	- Arguments:
   		opt: Operation type (specifies the calculation used between the two values)
   		- Possible entries:
   			add - arithmetic addition
   			sub - arithmetic subtraction
   			mul - arithmetic multiplication
-  			div - arithmetic division
+  			div - arithmetic (integer) division
   		- Decoded position: [add, sub, mul, div] -> [00, 01, 10, 11] @ 'tt'
 
   		rg1: Main operand register. Value of this register is the first term in the operation; the main result of the operation is also stored here
@@ -114,11 +113,10 @@ SPOCsys16 Instruction Set
   		- Decoded position: @ 'bbbb'
 
 
- > 0010 2 LGC = Logic | LGC opt rg1 rg2 | LGC NOT rg1
-	A. Completes a logic calculation between individual bits (bitwise) of the two registers given ('rg1', 'rg2').
-    	e.g. rg1 AND rg2, rg1 OR rg2, rg1 XOR rg2; these are also the three possible calculations with this syntax.
-    	The operation done is specified by its 3 letter sign code ('opt'), which decides the calculation.
-    	Result of the operation is stored in the first register ('rg1').
+ > 0010 2 LGC = Logic | A. LGC opt rg1 rg2 | B. LGC NOT rg1
+	A. Completes a bitwise logic calculation of the two registers given ('rg1', 'rg2').
+    	The operation to be done is specified by its 3 letter sign code ('opt'), which decides the type of calculation.
+    	The result of the operation is stored in the first register given ('rg1').
     	- Arguments:
  		opt: Operation type (specifies the calculation used between the two values)
 		- Possible entries: 
@@ -145,13 +143,13 @@ SPOCsys16 Instruction Set
  	              Decoded position: @ 'aaaa'
 
 
-  > 0011 3 JMP = (Un)Conditional Process Jump | JMP adr ctf rg1 rg2 | JMP adr IMD
-	A. Jumps to a specified (given either by dynamic (+x/-x) or static (x) format) line ('adr') whether the condition given ('ctf') is true for the values of the two registers given ('rg1', 'rg2').
-	The condition ('ctf') includes a relative comparison between the registers ('rg1', 'rg2'), whether the value they contain is 0 or not, and whether to jump when it applies or when it does not.
-	If the condition turns out to be true (or false, for that matter) the address of the line given ('adr') is stored in the instruction counter/pointer (RIP), and the process continues there.
+ > 0011 3 JMP = (Un)Conditional Process Jump | A. JMP adr ctf rg1 rg2 | B. JMP adr IMD
+	A. Jumps to a specified (dynamic or static) line ('adr') whether the condition given ('ctf') is true for the values of the two registers given ('rg1', 'rg2').
+	The condition ('ctf') includes a relative comparison between the registers ('rg1', 'rg2'), whether the first register is equal to 0 or not, and whether to jump when it holds true or false.
+	If the condition turns out to be true (or false, for that matter) the address of the line given ('adr') is stored in the instruction counter/pointer (RIP), and the process continues at that line.
 	- Arguments:
 		adr: Address (n of line)
-		- Possible entries: decimal
+		- Possible entries: decimal (13 bits)
 			static value - decimal value given as is (max. 13 bit length)
 			dynamic value - positive (+) or negative (-) decimal value (added to the line address of the instruction itself; being final value) (max. 13 bit final length)
 		- Decoded position: @ 'ddddddddddddd'
@@ -186,13 +184,133 @@ SPOCsys16 Instruction Set
 		- Possible entries: registers
 	        - Decoded position: @ 'bbbb'
 
-	B. Jumps to specified (given either by dynamic or static format) line ('adr') unconditionally (whenever RIP reaches the instruction).
+	B. Jumps to specified (dynamic or static) line ('adr') unconditionally (whenever RIP reaches the instruction).
 	- Arguments:
 		adr: Address (n of line)
-		- Possible entries: decimal
+		- Possible entries: decimal (13 bits)
 			static value - decimal value given as is (max. 13 bit length)
 			dynamic value - positive (+) or negative (-) decimal value (added to the line address of the instruction itself; being final value) (max. 13 bit final length)
 		- Decoded position: @ 'ddddddddddddd'
 
 		(ctf: Condition: imd)
+
+
+ > 0100 4 IDC = Increment, Decrement | A. IDC dir reg
+	A. Increments or Decrements the given register ('reg') by 1 based on which was specified ('dir').
+	- Arguments:
+		dir: Direction (in- or decrement)
+		- Possible entries:
+			inc - increment (+1)
+			dec - decrement (-1)
+		- Decoded position: [inc, dec] -> [1, 0] @ 'i'
 		
+		rg1: Register
+		- Possible entries: registers
+		- Decoded position: @ 'aaaa'
+
+
+ > 0101 5 CAP = Bitcap / Bitmask | A. CAP reg beg len
+ 	A. "Caps" the register's ('reg') available (usable) bitspace, starting from bit #n, n being the beginning bit ('beg'), ending at bit #n+l, l being the amount of bits ('len') to be kept usable.
+ 	Essentially, this masks every other bit in the register and makes them static to not be able to edit or change them in any way, until the "bitcap" is modified or reset (lifted).
+ 	The "cap" on the register is kept until it is modified or reset with another CAP instruction, and it cannot be changed either in any other way.
+ 	Whenever a value is stored in the register or is being read from it, the processor will handle it if as it was just exactly that many bits as specified ('len'), with the beginning of values being read/written from the beginning bit ('beg') instead of the 0th bit.
+ 	With a visual example:
+ 		reg = |abcdefghijklmnop| -> 'CAP reg 4 9' -> |---defghijkl----| -> -------|edfghijkl|
+ 		       FEDCBA9876543210                       FEDCBA9876543210             CBA987654
+ 	- Arguments:
+ 		rg1: Register (to be bitcapped)
+ 		- Possible entries: registers
+ 		- Decoded position: @ 'aaaa'
+ 		
+ 		beg: Beginning bit (capping starts from)
+ 		- Possible entries: hexadecimal (without the "0x"!) (4 bits)
+ 		- Decoded position: @ 'bbbb'
+ 		
+ 		len: Bit length (capping lasts for)
+ 		- Possible entries: decimal (4 bits)
+ 		- Decoded position: @ 'llll'
+
+
+ > 0110 6 SHF = Bitshift | A. SHF rg1 dir val
+ 	A. Shifts value in register ('reg') in the specified direction ('dir') by the amounts of bits given ('val').
+ 	There is no rollaround (for now), newly introduced bits get default value of 0.
+ 	- Arguments:
+ 		rg1: Register (to be bitshifted)
+ 		- Possible entries: registers
+ 		- Decoded position: @ 'aaaa'
+ 		
+ 		dir: Direction (to shift)
+ 		- Possible entries:
+ 			_up - shift up (towards left; increase value by 2^val)
+ 			dwn - shift down (towards right; decrease value by 2^val)
+ 		- Decoded position: [_up, dwn] -> [1, 0] @ 'i'
+ 		
+ 		val: Value (amount of bits to shift)
+ 		- Possible entries: decimal (4 bits)
+ 		- Decoded position: @ 'vvvv'
+
+
+ > 0111 7 MEM = Memory Access | A. MEM plc rg1 rg2 | B. MEM DMP adr val
+ 	A. Stores in or reads from a specified partition in memory ('plc') at an address, that being the value in the given register ('rg2') into/from the other given register ('rg1').
+ 	- Arguments:
+ 		plc: Place (to read from/store in; also which partition)
+ 		- Possible entries:
+ 			1st letter: partition (in RAM)
+ 			 d - program data (only accessible by the CPU)
+ 			 e - external data (also accessible by outside sources; I/O)
+ 			2-3rd letters: command
+ 			 re - read from (store in rg1)
+ 			 st - store in (read from rg1)
+ 		- Decoded positions:
+ 			1st letter: (partition)
+ 			 [d, e] -> [0, 1] @ 'p'
+ 			2-3rd letters: (command)
+ 			 [re, st] -> [0, 1] @ 'c'
+ 		
+ 		rg1: Value register (where value from RAM will be stored, or where value will be read from into RAM)
+ 		- Possible entries: registers
+ 		- Decoded position: @ 'aaaa'
+ 		
+ 		rg2: Address register (value of this register is the address given to RAM)
+ 		- Possible entries: registers
+ 		- Decoded position: @ 'bbbb'
+
+	B. Stores ("dumps") a specified value ('val') in the specified address ('adr'). Limitations are that the address can only be from #0 to #2047 and only in the program data partition.
+	Essentially a "move value" instruction for memory.
+	- Arguments:
+		(plc: Place: dmp)
+		
+		adr: Address
+		- Possible entries: hexadecimal (without "0x"!) (11 bits)
+		- Decoded position: @ 'ddddddddddd'
+		
+		val: Value
+		- Possible entries: binary, hexadecimal, or decimal (16 bits)
+		- Decoded position: @ 'vvvvvvvvvvvvvvvv'
+
+
+ > 1000 8 DSP = Display Access | A. DSP way rg1
+ 	A. Stores the value from the external data partition of memory at the address stored in the given register ('rg1') into the output register, while also sending a signal about it to the "out_en" channel.
+ 	Alternatively, opens the "inp_en" gate for outside data flow to be stored in the external data partition of memory at the address stored in the given register ('rg1').
+ 	- Arguments:
+ 		way: Dataflow Way
+ 		- Possible entries:
+ 			inp - inputted data is stored
+ 			out - already stored data is outputted
+ 		- Decoded position: [inp, out] -> [0, 1] @ 'w'
+ 		
+ 		rg1: Address register (value stored in this register is used as address for memory)
+ 		- Possible entries: registers
+ 		- Decoded position: @ 'aaaa'
+
+
+ > 1111 F END = Process Halt | A. END | B. END exc
+ 	A. Halts the process (stops the clock) and writes out 0 as exit code.
+ 	- Arguments:
+ 		<none>
+
+ 	B. Halts the process (stops the clock) and writes out the specified exit code ('exc').
+ 	- Arguments:
+ 		exc: Exit Code
+ 		- Possible entries: decimal (16 bits)
+ 		- Decoded position: @ 'xxxxxxxxxxxxxxxx'
