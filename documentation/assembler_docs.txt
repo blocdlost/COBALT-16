@@ -1,0 +1,56 @@
+COBALT-16 Assembler Documentation - General knowledge and Usage
+
+> GENERAL KNOWLEDGE:
+  
+  Purpose of the assembler:
+	The assembler allows you, the user, to write programs for the COBALT-16 cpu without having to assemble your mnemonic code into hexadecimal yourself.
+	This makes it a more pleasant and working experience for anyone who wants to experiement with the capabilities of the processor.
+  
+  How the assembler works:
+  	The assembler takes in a "raw" file, labeled 'raw.txt', reads its individual mnemonic lines, rids it of any additional comments added afterwards, then translates the instruction and its arguments into its hexadecimal counterpart, which then is written into an "encoded" file, labeled 'encoded.txt'.
+  	What the assembler looks at and what it writes based on arguments or instructions (instruction decoding) is explained in the Instruction Documentation, at the "Possible entries" and "Decoded position".
+  	Essentially, it takes the line, splits it into the building blocks (instruction and arguments), checks operand codes, and based on those it generates binary outputs, which then are stuck together into a 32 bit line. At the end this gets translated from binary to hexadecimal, from 32 bits to 8 nibbles.
+
+  Capabilities of the assembler:
+  	- The mnemonic code in the 'raw.txt' file is allowed to have comments, separated from the instruction itself by a pound (#) sign.
+  	It is expected that between the last argument of the instruction and the pound sign there is exactly 1 space.
+  	*In the future this expectation will be less strict!
+
+  	- Error recognizing and displaying, with the line where it was caught.
+  	This allows the user to quickly look back at the line and think about what could have been wrong
+  	*In the future the errors will be less vague, there will be small explanations of what exactly triggered them!
+
+  	- Binary, hexadecimal and decimal value recognision.
+	In some instructions, the assembler supports the value given to be binary, hexadecimal or decimal; binary and hexadecimal values signed by "0b" and "0x" respectively.
+	*In the future all cases of value arguments will support this!
+
+> USAGE:
+  
+  Check before:
+  	- whether the 'raw.txt' and 'encoded.txt' files are in the same directory as the assembler 'assembler.py',
+  	- your program does not exceed 8192 lines, as there are only that many entries in the process ROM,
+  	- there are no more than 1 empty line between instructions (and that empty line contains no comments),
+  	- if there are any comments, between the end of the instruction and the "#" sign there is exactly 1 space.
+
+  To use:
+  	1. Paste your mnemonic code (with or without comments) in the 'raw.txt' file
+  	2. Run the python assembler program 'assembler.py' (recommended to do so from terminal, as otherwise you won't see errors)
+  		2a. If the assembler has detected errors with the original mnemonic, fix them, and paste the fixed version back into the 'raw.txt' file
+  	3. If no errors occured, you should see "Assembly completed flawlessly" followed by the line and byte count of the final hexadecimal code
+  	4. Copy the hexadecimal from 'encoded.txt' as-is, and paste it into the ROM of the circuit in Logisim Evolution
+  
+  Possible errors:
+  	When assembling, the terminal (or whereever you are executing the assembly from) may print out the following:
+  	 "[WARN] Error(s) ocurred in [amount] line(s): [no. of lines]"
+  	 "[WARN] List of error(s):"
+  	This means that the assembler has found incorrect mnemonic in your code, and could not translate it into hexadecimal.
+  	The errors possible are the following, with explanations:
+  	 "[ERROR] Incorrect instruction: opCodeError" - The 3 letter operation code of the main instruction is not recognized, may be because of typo.
+  	 "[ERROR] Incorrect instruction: lengthError" - The expected length of the entire instruction is not reached or overshot, may be because of wrong argument usage.
+  	 "[ERROR] Incorrect instruction argument(s): argumentError" - A general argument opcode was incorrect, or not recognized, may be because of typo.
+  	 "[ERROR] Incorrect instruction argument(s): registerError" - An argument which expected a register code did not recognize it, may be because of typo.
+  	 "[ERROR] Incorrect instruction argument(s): valueError" - The given value falls out of the expected boundary, may be because of typo or insufficient knowledge.
+  	The list of errors also contains the number of line next to each error where it was detected/occurred.
+
+
+To start coding, consult the Instruction Documentation first, to be aware of the Possible entries of each instruction.

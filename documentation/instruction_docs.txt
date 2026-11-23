@@ -83,12 +83,12 @@ COBALT-16 Instruction Set - Dictionary and explanations
 	B. Moves the value specified to register (rg1), essentially storing the requested value in register.
 	- Arguments:
 		rg1: Destination register (given value gets stored here)
-	        - Possible entries: registers
-	        - Decoded position: 'aaaa'
+		- Possible entries: registers
+		- Decoded position: 'aaaa'
 
-	        val: Value
-	        - Possible entries: binary, hexadecimal, or decimal (16 bits)
-	        - Decoded position: @ 'vvvvvvvvvvvvvvvv'
+		val: Value
+		- Possible entries: binary, hexadecimal, or decimal (16 bits)
+		- Decoded position: @ 'vvvvvvvvvvvvvvvv'
 
 
  > 0001 1 ART = Arithmetic | A. ART opt rg1 rg2
