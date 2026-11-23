@@ -1,4 +1,4 @@
-SPOCsys16 Instruction Set
+COBALT-16 Instruction Set - Dictionary and explanations
 
 -Legend:
  bbbb H ins - A: op1, op2, ...		bbbb ssssssssssssssssssssssssssss
@@ -267,13 +267,13 @@ SPOCsys16 Instruction Set
  			2-3rd letters: (command)
  			 [re, st] -> [0, 1] @ 'c'
  		
- 		rg1: Value register (where value from RAM will be stored, or where value will be read from into RAM)
- 		- Possible entries: registers
- 		- Decoded position: @ 'aaaa'
+		rg1: Value register (where value from RAM will be stored, or where value will be read from into RAM)
+		- Possible entries: registers
+		- Decoded position: @ 'aaaa'
  		
- 		rg2: Address register (value of this register is the address given to RAM)
- 		- Possible entries: registers
- 		- Decoded position: @ 'bbbb'
+		rg2: Address register (value of this register is the address given to RAM)
+		- Possible entries: registers
+		- Decoded position: @ 'bbbb'
 
 	B. Stores ("dumps") a specified value ('val') in the specified address ('adr'). Limitations are that the address can only be from #0 to #2047 and only in the program data partition.
 	Essentially a "move value" instruction for memory.
@@ -297,7 +297,7 @@ SPOCsys16 Instruction Set
  		- Possible entries:
  			inp - inputted data is stored
  			out - already stored data is outputted
- 		- Decoded position: [inp, out] -> [0, 1] @ 'w'
+ 		- Decoded position: [inp, out] -> [1, 0] @ 'w'
  		
  		rg1: Address register (value stored in this register is used as address for memory)
  		- Possible entries: registers
