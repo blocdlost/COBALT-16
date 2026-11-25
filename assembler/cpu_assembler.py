@@ -28,12 +28,12 @@ def register(reg):
         return "b0110"
     elif reg == "r4x":
         return "b0111"
-    elif str.isdecimal(reg) == True or reg[0:2] == "0b" or reg[0:2] == "0x":
+    elif reg.isdecimal() or reg[0:2] == "0b" or reg[0:2] == "0x" or (reg[1:].isdecimal() and reg[0] == "-"):
         return reg
     else:
         return "N/A"
 
-def hex2dec(num):
+def hex2dec(num): # is literally just int(num, 16) ???
     for q in range(10):
         if num == str(q):
             return str(num)
@@ -58,6 +58,36 @@ def exactbit(val, bits):
     val = (bits-len(val))*"0"+str(val)
     return val
 
+def convbases(value):
+    if value[0:2] == "0b": # binary
+        try:
+            return int(value, 2)
+        except ValueError:
+            return "N/A,digit" # wrong digit, did not use 1 or 0
+    elif value[0:2] == "0x": # hexadecimal
+        try:
+            return int(value, 16)
+        except ValueError:
+            return "N/A,digit" # wrong digit, did not use 0-9, a-f
+    elif value.isdecimal() or value[1:].isdecimal() and value[0] == "-": # decimal
+        return value
+    elif value == "N/A": # not available
+        return "N/A,def" # wrong definition, the given value was already not available
+    else: # incorrectly defined
+        return "N/A,base" # wrong base is used / is not recognized
+
+def mkerror(errorstr, message):
+    errors.append(str(lineNo+1)+errorstr+"- "+message+"\n")
+    return "N/A"
+
+def twoscomp(value, bits):
+    if int(value) >= 0 or str(value).isdecimal():
+        return value
+    else:
+        fval = 2**(int(bits)-1) # -1 = 15 (1111) because -8 +7; -2 = 14 (1110) because -8 +6 | x = value+fval, return x+fval
+        return int(value)+2*fval
+
+
 rawFile = open("raw.txt", "r")
 rawLine = rawFile.readline()
 
@@ -72,60 +102,42 @@ while rawLine:
     if comment != -1:
         mnemonic = mnemonic[0:comment-1]
 
-    #print(lineNo, mnemonic)
-
-
     line = mnemonic
     inst = line[0:3]
     length = len(line)
     contents = line.split()
 
-    if inst == "MOV":       #move instruction: 0, 0000                      MOV rg1 rg2; MOV rg1 val
-        if length < 9:
-            errors.append(str(lineNo+1)+lenerror+"\n")
-            code = "N/A"
-
+    if inst == "MOV":       #move instruction: 0, 0000                      MOV rg1 rg2; MOV rg1 val; REFACTOR V2 COMPLETE
+        if len(contents) != 3:
+            code = mkerror(lenerror, "incorrect amount of arguments")
         else:
-            movDest = register(line[4:7])
-            movMove = register(line[8:length])
-            movMoveVal = 0
+            movDest = contents[1]
+            movSta = contents[2]
 
-            if movMove[0:2] == "0b": #if given value is binary
-                for i in range(len(movMove[2:len(movMove)])):
-                    if int(movMove[-(i+1)]) != 0 and int(movMove[-(i+1)]) != 1: #incorrect digit
-                        movMoveVal = "N/A"
-                        break
-                    else:
-                        bit = int(movMove[-(i+1)])*(2**i)
-                        movMoveVal += bit
-                movMove = movMoveVal
+            if convbases(register(movSta)) == "N/A,base": # movSta is a register
+                movSta = register(movSta) # b0001 - b0111
+            elif convbases(register(movSta)) == "N/A,digit": #movSta is a value, but incorrectly defined in it's base
+                movSta = "N/A,digit"
+            elif convbases(register(movSta)) == "N/A,def": #movSta is given incorrectly, not available at all
+                movSta = "N/A,def"
+            else: #movSta is a value (binary, hexadecimal, decimal) and is correctly given and avilable
+                movSta = convbases(movSta) # 0 - 65535
 
-            elif movMove[0:2] == "0x": #if given value is hexadecimal
-                for i in range(len(movMove[2:len(movMove)])):
-                    if hex2dec(movMove[-(i+1)]) == "N/A": #incorrect digit
-                        movMoveVal = "N/A"
-                        break
-                    else:
-                        hexa = int(hex2dec(movMove[-(i+1)]))*(16**i)
-                        movMoveVal += hexa
-                movMove = movMoveVal
+            movDest = register(movDest)
 
-            movMove = str(movMove)
-
-            if movMove == "N/A" and movMoveVal == "N/A":
-                errors.append(str(lineNo+1)+valerror+"\n")     #value is incorrectly encoded; binary/hexadecimal setting uses wrong digits
-                code = "N/A"
-            elif movDest == "N/A" or movMove == "N/A" or str.isdecimal(movDest):
-                errors.append(str(lineNo+1)+regerror+"\n")
-                code = "N/A"
-            elif str.isdecimal(movMove) == True and int(movMove) > 65535:
-                errors.append(str(lineNo+1)+valerror+"\n")     #value is over 16 bits long
-                code = "N/A"
-            elif str.isdecimal(movMove) == True:
-                movMove = exactbit(movMove, 16)
-                code = "0000"+"1"+str(movDest)[1:5]+str(movMove)+"0000000"
-            elif str.isdecimal(movMove) == False:
-                code = "0000"+"0"+str(movDest)[1:5]+str(movMove)[1:5]+"0000000000000000000"
+            if movSta == "N/A,def":
+                code = mkerror(argerror, "second argument unrecognizable")
+            elif movDest == "N/A":
+                code = mkerror(regerror, "destination register unrecognizable")
+            elif movSta == "N/A,digit":
+                code = mkerror(valerror, "value incorrectly defined")
+            elif str(movSta)[0] == "b": # if MOV A. (start -> dest)
+                code = "0000"+"0"+movDest[1:5]+movSta[1:5]+19*"0"
+            elif int(movSta) > 65535 or int(movSta) < -32768:
+                code = mkerror(valerror, "value defined is out of bounds")
+            else: # if MOV B. (value -> dest)
+                movSta = exactbit(twoscomp(movSta, 16), 16)
+                code = "0000"+"1"+movDest[1:5]+movSta+7*"0"
 
     elif inst == "ART":     #arithmetic instruction: 1, 0001                ART mth rg1 rg2
         if length != 15:
@@ -158,7 +170,7 @@ while rawLine:
             else:
                 code = "0001"+artIns+artDest[1:5]+artOp[1:5]+"000000000000000000"
 
-    elif inst == "LGC":     #logic instruction: 2, 0010                     LGC lgc rg1 rg2; LGC not reg
+    elif inst == "LGC":     #logic instruction: 2, 0010                     LGC lgc rg1 rg2; LGC not reg;
         if length != 15 and length != 11:
             errors.append(str(lineNo+1)+lenerror+"\n")
             code = "N/A"
@@ -194,10 +206,9 @@ while rawLine:
             else:
                 code = "0010"+lgcIns+lgcDest[1:5]+lgcOp[1:5]+"000000000000000000"
 
-    elif inst == "JMP":     #process branch (jump) instruction: 3, 0011     JMP i cnd rg1 rg2
+    elif inst == "JMP":     #process branch (jump) instruction: 3, 0011     JMP i cnd rg1 rg2; REFACTOR V2 COMPLETE
         if len(contents) < 3 or len(contents) > 5:
-            errors.append(str(lineNo+1)+lenerror+"\n")
-            code = "N/A"
+            code = mkerror(lenerror, "incorrect amount of arguments")
         else:
             jmpAddr = contents[1]
 
@@ -261,23 +272,22 @@ while rawLine:
                     jmpCnd = "000"+jmpCnd1+jmpCnd2+jmpCnd3
 
                 if len(contents) == 5: #only needed if not immediate
-                    jmpRg1 = register(contents[3])[1:5]
-                    jmpRg2 = register(contents[4])[1:5]
+                    jmpRg1 = register(contents[3])
+                    jmpRg2 = register(contents[4])
                 else:
                     jmpRg1 = "N/A" #returns regerror
                     jmpRg2 = "N/A" #returns regerror
 
-            if jmpAddr == "N/A,arg" or jmpCnd == "N/A": #error checks
-                code = "N/A"
-                errors.append(str(lineNo+1)+argerror+"\n")
+            if jmpAddr == "N/A,arg": #error checks
+                code = mkerror(argerror, "line address unrecognizable")
+            elif jmpCnd == "N/A":
+                code = mkerror(argerror, "jump condition unrecognizable")
             elif jmpAddr == "N/A,val":
-                code = "N/A"
-                errors.append(str(lineNo+1)+valerror+"\n")
+                code = mkerror(valerror, "line address out of bounds")
             elif jmpRg1 == "N/A" or jmpRg2 == "N/A":
-                code = "N/A"
-                errors.append(str(lineNo+1)+regerror+"\n")
+                code = mkerror(regerror, "register(s) unrecognizable")
             else:
-                code = "0011"+jmpAddr+jmpCnd+jmpRg1+jmpRg2
+                code = "0011"+jmpAddr+jmpCnd+jmpRg1[1:5]+jmpRg2[1:5]
 
     elif inst == "IDC":     #in/decrement instruction: 4, 0100              IDC dir reg
         if length != 11:
@@ -320,11 +330,11 @@ while rawLine:
             elif int(capLen) > 15:
                 errors.append(str(lineNo+1)+valerror+"\n")
                 code = "N/A"
-            elif hex2dec(capBgn) == "N/A" or line[9] != " ":
+            elif int(capBgn, 16) == "N/A" or line[9] != " ":
                 errors.append(str(lineNo+1)+argerror+"\n")
                 code = "N/A"
             else:
-                capBgn = exactbit(hex2dec(capBgn), 4)
+                capBgn = exactbit(int(capBgn, 16), 4)
 
                 capLen = bin(int(capLen))[2:len(bin(int(capLen)))]
                 capLen = str((4-len(capLen))*"0"+str(capLen))
@@ -379,7 +389,7 @@ while rawLine:
                         dmpAddrVal = "N/A"
                         break
                     else:
-                        dmpAddrVal += (16**i)*int(hex2dec(dmpAddr[-i-1]))
+                        dmpAddrVal += (16**i)*int(dmpAddr[-i-1], 16)
                 dmpAddr = dmpAddrVal
 
                 dmpValEx = 0
@@ -482,49 +492,19 @@ while rawLine:
         code = ""
     
     else:
-        errors.append(str(lineNo+1)+inserror+"\n")
-        code = "N/A"
+        code = mkerror(inserror, "instruction opcode is unrecognizable")
 
     if code == "N/A":
         errorList.append(lineNo+1)
     elif code == "":
         encodedFile.write("")
     else:
+        print(code)
         full = ""
         for i in range(8):
             curr = code[i*4:(i+1)*4]
-            if curr == "0000":
-                curr = "0"
-            elif curr == "0001":
-                curr = "1"
-            elif curr == "0010":
-                curr = "2"
-            elif curr == "0011":
-                curr = "3"
-            elif curr == "0100":
-                curr = "4"
-            elif curr == "0101":
-                curr = "5"
-            elif curr == "0110":
-                curr = "6"
-            elif curr == "0111":
-                curr = "7"
-            elif curr == "1000":
-                curr = "8"
-            elif curr == "1001":
-                curr = "9"
-            elif curr == "1010":
-                curr = "A"
-            elif curr == "1011":
-                curr = "B"
-            elif curr == "1100":
-                curr = "C"
-            elif curr == "1101":
-                curr = "D"
-            elif curr == "1110":
-                curr = "E"
-            elif curr == "1111":
-                curr = "F"
+            curr = hex(int(curr, 2))
+            curr = curr[2:len(curr)]
             full += curr
         encodedFile.write(full+"\n")
 
@@ -540,5 +520,8 @@ if len(errorList) > 0:
     print("[WARN] List of error(s):")
     for err in errors:
         print(err, end="")
+    encodedFile = open("encoded.txt", "w")
+    encodedFile.write("Errors have been found in the original code! Fix them first, then run again.")
+    encodedFile.close()
 else:
     print(f"Assembly completed flawlessly: {lineNo} line(s), {(lineNo)*4} byte(s)")

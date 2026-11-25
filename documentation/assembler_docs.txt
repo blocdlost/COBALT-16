@@ -18,11 +18,12 @@ COBALT-16 Assembler Documentation - General knowledge and Usage
 
   	- Error recognizing and displaying, with the line where it was caught.
   	This allows the user to quickly look back at the line and think about what could have been wrong
-  	*In the future the errors will be less vague, there will be small explanations of what exactly triggered them!
+  	*In the future all errors will be less vague, there will be small explanations of what exactly triggered them!
 
   	- Binary, hexadecimal and decimal value recognision.
 	In some instructions, the assembler supports the value given to be binary, hexadecimal or decimal; binary and hexadecimal values signed by "0b" and "0x" respectively.
-	*In the future all cases of value arguments will support this!
+	In a few cases it also allows decimal values to be given in negative, converting it to its positive counterpart with two's complement. Negative and positive distinction is also used to set "dynamic" values, which are based on numbers already determined, e.g. jumping not to specific line, but rather line at a distance of the instruction.
+	*In the future all possible cases of value arguments will support these!
 
 > USAGE:
   
@@ -43,7 +44,7 @@ COBALT-16 Assembler Documentation - General knowledge and Usage
   	When assembling, the terminal (or whereever you are executing the assembly from) may print out the following:
   	 "[WARN] Error(s) ocurred in [amount] line(s): [no. of lines]"
   	 "[WARN] List of error(s):"
-  	This means that the assembler has found incorrect mnemonic in your code, and could not translate it into hexadecimal.
+  	This means that the assembler has found incorrect mnemonic in your code, and could not translate it into hexadecimal. In this case the 'encoded.txt' file will only contain a message saying an error occurred.
   	The errors possible are the following, with explanations:
   	 "[ERROR] Incorrect instruction: opCodeError" - The 3 letter operation code of the main instruction is not recognized, may be because of typo.
   	 "[ERROR] Incorrect instruction: lengthError" - The expected length of the entire instruction is not reached or overshot, may be because of wrong argument usage.
@@ -51,6 +52,7 @@ COBALT-16 Assembler Documentation - General knowledge and Usage
   	 "[ERROR] Incorrect instruction argument(s): registerError" - An argument which expected a register code did not recognize it, may be because of typo.
   	 "[ERROR] Incorrect instruction argument(s): valueError" - The given value falls out of the expected boundary, may be because of typo or insufficient knowledge.
   	The list of errors also contains the number of line next to each error where it was detected/occurred.
+  	* WIP: in some errors, (for now: MOV, JMP) the errors will also display info about what exactly was thought to be incorrect.
 
 
 To start coding, consult the Instruction Documentation first, to be aware of the Possible entries of each instruction.
