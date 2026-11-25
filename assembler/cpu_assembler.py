@@ -499,7 +499,6 @@ while rawLine:
     elif code == "":
         encodedFile.write("")
     else:
-        print(code)
         full = ""
         for i in range(8):
             curr = code[i*4:(i+1)*4]
