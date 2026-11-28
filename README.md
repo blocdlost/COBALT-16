@@ -30,11 +30,8 @@ _Ideas for what could come next, what is planned and what is currently being wor
 
 **WIP, currently in development**
 
-Assembler refactor: currently trying to make the program less of a mess and make it more readable and have less redundant code.
-Instructions currently done are `MOV` and `JMP`.
-
-Direct DSP in/output from registers: instead of only being able to use the external data partition of memory, it would also be able to read from/write to registers directly.
-The circuit (instruction decoding, control) is done for the most part, however assembler support and further testing is still required.
+Assembler refactor: currently trying to make the program less of a mess and make it more readable with less redundant code.
+Instructions currently done are `MOV`, `JMP` and `DSP`.
 
 **Planned**
 

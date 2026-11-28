@@ -313,7 +313,7 @@ COBALT-16 Instruction Set - Dictionary and explanations
 			out - already stored data is output
 		- Decoded position: [inp, out] -> [1, 0] @ 'w'
  		
- 		rg1: Address register (value stored in this register is used as address for memory)
+ 		rg1: Register (value input is stored here / value stored here is output)
  		- Possible entries: registers
  		- Decoded position: @ 'aaaa'
  		
