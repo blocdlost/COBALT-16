@@ -3,7 +3,7 @@ COBALT-16 Assembler Documentation - General knowledge and Usage
 > GENERAL KNOWLEDGE:
   
   Purpose of the assembler:
-	The assembler allows you, the user, to write programs for the COBALT-16 cpu without having to assemble your mnemonic code into hexadecimal yourself.
+	The assembler allows you, the user, to write programs for the COBALT-16 CPU without having to assemble your mnemonic code into hexadecimal yourself.
 	This makes it a more pleasant and working experience for anyone who wants to experiement with the capabilities of the processor.
   
   How the assembler works:
@@ -20,8 +20,8 @@ COBALT-16 Assembler Documentation - General knowledge and Usage
   	This allows the user to quickly look back at the line and think about what could have been wrong
   	*In the future all errors will be less vague, there will be small explanations of what exactly triggered them!
 
-  	- Binary, hexadecimal and decimal value recognision.
-	In some instructions, the assembler supports the value given to be binary, hexadecimal or decimal; binary and hexadecimal values signed by "0b" and "0x" respectively.
+  	- Binary, hexadecimal and decimal value recognition.
+	In some instructions, the assembler supports the value to be given in binary, hexadecimal or decimal; binary and hexadecimal values signed by "0b" and "0x" respectively.
 	In a few cases it also allows decimal values to be given in negative, converting it to its positive counterpart with two's complement. Negative and positive distinction is also used to set "dynamic" values, which are based on numbers already determined, e.g. jumping not to specific line, but rather line at a distance of the instruction.
 	*In the future all possible cases of value arguments will support these!
 
@@ -35,7 +35,7 @@ COBALT-16 Assembler Documentation - General knowledge and Usage
 
   To use:
   	1. Paste your mnemonic code (with or without comments) in the 'raw.txt' file
-  	2. Run the python assembler program 'assembler.py' (recommended to do so from terminal, as otherwise you won't see errors)
+  	2. Run the python assembler program 'assembler.py' (recommended to do so from terminal or where the std.out is accessible; error message is visible)
   		2a. If the assembler has detected errors with the original mnemonic, fix them, and paste the fixed version back into the 'raw.txt' file
   	3. If no errors occured, you should see "Assembly completed flawlessly" followed by the line and byte count of the final hexadecimal code
   	4. Copy the hexadecimal from 'encoded.txt' as-is, and paste it into the ROM of the circuit in Logisim Evolution
@@ -52,7 +52,7 @@ COBALT-16 Assembler Documentation - General knowledge and Usage
   	 "[ERROR] Incorrect instruction argument(s): registerError" - An argument which expected a register code did not recognize it, may be because of typo.
   	 "[ERROR] Incorrect instruction argument(s): valueError" - The given value falls out of the expected boundary, may be because of typo or insufficient knowledge.
   	The list of errors also contains the number of line next to each error where it was detected/occurred.
-  	* WIP: in some errors, (for now: MOV, JMP) the errors will also display info about what exactly was thought to be incorrect.
+  	* WIP: in some errors, (for now: MOV, JMP, DSP) the errors will also display info about what exactly was thought to be incorrect.
 
 
 To start coding, consult the Instruction Documentation first, to be aware of the Possible entries of each instruction.

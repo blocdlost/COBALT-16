@@ -1,6 +1,6 @@
-# ASSEMBLER FOR CUSTOM 16 BIT CPU (SPOCsys16) ASSEMBLY LANGUAGE (SPAsm)
+# ASSEMBLER FOR CUSTOM 16 BIT CPU (COBALT-16) ASSEMBLY LANGUAGE 
 #
-# MOV ART LGC JMP IDC CAP SHF MEM DSP | END
+# MOV ART LGC JMP IDC CAP SHF MEM DSP END
 
 inserror = " [ERROR] Incorrect instruction: opCodeError "                  #opcode is not recognized
 lenerror = " [ERROR] Incorrect instruction: lengthError "                  #the length of the line itself falls out of a possible instruction boundary
@@ -454,25 +454,38 @@ while rawLine:
                 errors.append(str(lineNo+1)+argerror+"\n")
                 code = "N/A"
 
-    elif inst == "DSP":     #display access instruction: 8, 1000            DSP i/o reg
-        if length != 11:
-            errors.append(str(lineNo+1)+lenerror+"\n")
-            code = "N/A"
+    elif inst == "DSP":     #display access instruction: 8, 1000            DSP i/o reg; REFACTOR V2 COMPLETE
+        if len(contents) != 3 and len(contents) != 4:
+            code = mkerror(lenerror, "incorrect amount of arguments")
         else:
-            dspIO = line[4:7]
-            dspReg = register(line[8:11])
+            dspIO = contents[1]
+            dspReg = register(contents[2])
+            try:
+                dspImd = contents[3]
+                match dspImd:
+                    case "imd":
+                        dspImd = "1"
+                    case _:
+                        dspImd = "N/A,arg"
+            except IndexError:
+                dspImd = "0"
 
-            if dspReg == "N/A" or str.isdecimal(dspReg) == True:
-                errors.append(str(lineNo+1)+regerror+"\n")
-                code = "N/A"
+            match dspIO:
+                case "inp":
+                    dspIO = "1"
+                case "out":
+                    dspIO = "0"
+                case _:
+                    dspIO = "N/A,arg"
+
+            if dspIO == "N/A,arg":
+                code = mkerror(argerror, "dataflow way unrecognizable")
+            elif dspReg == "N/A":
+                code = mkerror(regerror, "address register unrecognizable")
+            elif dspImd == "N/A,arg":
+                code = mkerror(argerror, "immediate argument unrecognizable")
             else:
-                if dspIO == "inp":
-                    code = "1000"+"1"+dspReg[1:5]+"00000000000000000000000"
-                elif dspIO == "out":
-                    code = "1000"+"0"+dspReg[1:5]+"00000000000000000000000"
-                else:
-                    errors.append(str(lineNo+1)+argerror+"\n")
-                    code = "N/A"
+                code = "1000"+dspIO+dspReg[1:]+dspImd+(22*"0")
 
     elif inst == "END":     #process halt instruction: F, 1111              END (exc)
         exCode = line[4:length]

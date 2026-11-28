@@ -32,7 +32,8 @@ COBALT-16 Instruction Set - Dictionary and explanations
  0110 6 SHF - A: rg1, dir, val          0110 aaaaivvvv-------------------	"bitshifting"
  0111 7 MEM - A: plc, rg1, rg2          0111 pcaaaabbbb-----------------0	"memory access"
             - B: DMP, adr, val          0111 dddddddddddvvvvvvvvvvvvvvvv1	"memory dump"
- 1000 8 DSP - A: way, rg1               1000 waaaa-----------------------	"display access"
+ 1000 8 DSP - A: way, rg1               1000 waaaa0----------------------	"display access to memory"
+            - B: way, rg1, IMD          1000 waaaa1----------------------	"display access to immediate"
  1111 F END - A:                        1111 ----------------------------	"empty halt"
             - B: exc                    1111 xxxxxxxxxxxxxxxx------------	"halt with exit code"
 
@@ -139,8 +140,8 @@ COBALT-16 Instruction Set - Dictionary and explanations
  		(opt: Operation type: not)
  		
  		rg1: Operand register (result of the operation is stored back into here)
- 	              Possible entries: registers
- 	              Decoded position: @ 'aaaa'
+ 		- Possible entries: registers
+ 		- Decoded position: @ 'aaaa'
 
 
  > 0011 3 JMP = (Un)Conditional Process Jump | A. JMP adr ctf rg1 rg2 | B. JMP adr IMD
@@ -289,20 +290,34 @@ COBALT-16 Instruction Set - Dictionary and explanations
 		- Decoded position: @ 'vvvvvvvvvvvvvvvv'
 
 
- > 1000 8 DSP = Display Access | A. DSP way rg1
- 	A. Stores the value from the external data partition of memory at the address stored in the given register ('rg1') into the output register, while also sending a signal about it to the "out_en" channel.
- 	Alternatively, opens the "inp_en" gate for outside data flow to be stored in the external data partition of memory at the address stored in the given register ('rg1').
+ > 1000 8 DSP = Display Access | A. DSP way rg1 | B. DSP way rg1 IMD
+ 	A. Stores the value from the external data partition of memory at the address stored in the given register ('rg1') into the output register.
+ 	Alternatively, allows outside data to be stored in the external data partition of memory at the address stored in the given register ('rg1').
  	- Arguments:
- 		way: Dataflow Way
+ 		way: Dataflow Way (which way data goes)
  		- Possible entries:
  			inp - inputted data is stored
- 			out - already stored data is outputted
+ 			out - already stored data is output
  		- Decoded position: [inp, out] -> [1, 0] @ 'w'
  		
  		rg1: Address register (value stored in this register is used as address for memory)
  		- Possible entries: registers
  		- Decoded position: @ 'aaaa'
 
+	B. Stores the value from given register ('rg1') into the output register.
+	Alternatively, allows outside data to be stored in the given register ('rg1').
+	- Arguments:
+		way: Dataflow way (which way data goes)
+		- Possible entries:
+			inp - inputted data is stored
+			out - already stored data is output
+		- Decoded position: [inp, out] -> [1, 0] @ 'w'
+ 		
+ 		rg1: Address register (value stored in this register is used as address for memory)
+ 		- Possible entries: registers
+ 		- Decoded position: @ 'aaaa'
+ 		
+ 		(imd: Immediate: imd)
 
  > 1111 F END = Process Halt | A. END | B. END exc
  	A. Halts the process (stops the clock) and writes out 0 as exit code.
@@ -316,4 +331,4 @@ COBALT-16 Instruction Set - Dictionary and explanations
  		- Decoded position: @ 'xxxxxxxxxxxxxxxx'
 
 NOTES:
- ¹Can be both positive and negative! Positive values from 0 to 65535, negative values from -1 to -32768. Obviously with binary translation using two's complement 65535 – 32767 will match with -1 – -32768.
+ ¹Can be both positive and negative! Positive values range from 0 to 65535, negative values range from -1 to -32768. Obviously with binary translation using two's complement numbers ranging from 65535 to 32767 will match with from -1 to -32768.
